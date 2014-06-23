@@ -56,14 +56,14 @@ void HGCSSDigitisation::addNoise(double & aDigiE, const unsigned & alay ,
   if (print) std::cout << lNoise << " " << aDigiE << std::endl;
 }
 
-unsigned HGCSSDigitisation::adcConverter(double eMIP, DetectorEnum adet){
+unsigned HGCSSDigitisation::adcConverter(double eMIP, DetectorEnum::DetectorEnum adet){
   if (eMIP<0) eMIP=0;
   double eADC = static_cast<unsigned>(eMIP*mipToADC_[adet]);
   if (eADC > maxADC_[adet]) eADC = maxADC_[adet];
   return eADC;
 }
 
-double HGCSSDigitisation::adcToMIP(const unsigned adcCounts, DetectorEnum adet, const bool smear){
+double HGCSSDigitisation::adcToMIP(const unsigned adcCounts, DetectorEnum::DetectorEnum adet, const bool smear){
   double lE = adcCounts*1.0/mipToADC_[adet];
   if (!smear) return lE;
   return rndm_.Gaus(lE,gainSmearing_[adet]*lE);

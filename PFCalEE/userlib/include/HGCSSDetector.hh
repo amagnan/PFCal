@@ -5,15 +5,18 @@
 #include <vector>
 #include <map>
 #include "TH2D.h"
+#include <cstdlib>
 
-enum DetectorEnum {
-  FECAL,
-  MECAL,
-  BECAL,
-  FHCAL,
-  BHCAL1,
-  BHCAL2
-};
+namespace DetectorEnum{
+  enum DetectorEnum {
+    FECAL,
+    MECAL,
+    BECAL,
+    FHCAL,
+    BHCAL1,
+    BHCAL2
+  };
+}
 
 class HGCSSSubDetector {
 
@@ -32,7 +35,7 @@ public:
   {};
   ~HGCSSSubDetector(){};
 
-  DetectorEnum type;
+  DetectorEnum::DetectorEnum type;
   std::string name;
   unsigned layerIdMin;
   unsigned layerIdMax;
@@ -63,7 +66,7 @@ public:
   const HGCSSSubDetector & subDetectorByLayer(const unsigned aLayer);
 
   unsigned getSection(const unsigned aLayer) const;
-  inline unsigned section(const DetectorEnum adet){
+  inline unsigned section(const DetectorEnum::DetectorEnum adet){
     if (enumMap_.find(adet) != enumMap_.end())
       return enumMap_[adet];
     return nSections();
@@ -77,11 +80,11 @@ public:
     return subdets_[aSection].nLayers();
   };
 
-  inline unsigned nLayers(DetectorEnum adet){
+  inline unsigned nLayers(DetectorEnum::DetectorEnum adet){
     return subdets_[enumMap_[adet]].nLayers();
   };
 
-  const HGCSSSubDetector & subDetectorByEnum(DetectorEnum adet);
+  const HGCSSSubDetector & subDetectorByEnum(DetectorEnum::DetectorEnum adet);
   inline const HGCSSSubDetector & subDetectorBySection(const unsigned aSection) const{
     return subdets_[aSection];
   };
@@ -94,11 +97,11 @@ public:
     return nSections_;
   };
 
-  inline DetectorEnum detType(const unsigned aSection) const{
+  inline DetectorEnum::DetectorEnum detType(const unsigned aSection) const{
     return subdets_[aSection].type;
   };
   
-  inline DetectorEnum detTypeLayer(const unsigned aLayer) const{
+  inline DetectorEnum::DetectorEnum detTypeLayer(const unsigned aLayer) const{
     return subdets_[getSection(aLayer)].type;
   };
   
@@ -121,7 +124,7 @@ private:
   std::vector<HGCSSSubDetector> subdets_;
   std::vector<unsigned> indices_;
   std::vector<unsigned> section_;
-  std::map<DetectorEnum,unsigned> enumMap_;
+  std::map<DetectorEnum::DetectorEnum,unsigned> enumMap_;
 
   unsigned nLayers_;
   unsigned nSections_;

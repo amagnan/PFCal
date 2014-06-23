@@ -78,23 +78,23 @@ public:
     noise_[alay] = aNoise;
   };
 
-  inline void setMipToADC(DetectorEnum adet, const double & aMipToADC){
+  inline void setMipToADC(DetectorEnum::DetectorEnum adet, const double & aMipToADC){
     mipToADC_[adet] = aMipToADC;
   };
 
-  inline void setMaxADC(DetectorEnum adet, const double & aMaxADC){
+  inline void setMaxADC(DetectorEnum::DetectorEnum adet, const double & aMaxADC){
     maxADC_[adet] = aMaxADC;
   };
 
-  inline void setTimeCut(DetectorEnum adet, const double & aTimeCut){
+  inline void setTimeCut(DetectorEnum::DetectorEnum adet, const double & aTimeCut){
     timeCut_[adet] = aTimeCut;
   };
 
-  inline void setGainSmearing(DetectorEnum adet, const double & aVal){
+  inline void setGainSmearing(DetectorEnum::DetectorEnum adet, const double & aVal){
     gainSmearing_[adet] = aVal;
   };
 
-  inline bool passTimeCut(DetectorEnum adet, const double & aTime){
+  inline bool passTimeCut(DetectorEnum::DetectorEnum adet, const double & aTime){
     return (aTime < timeCut_[adet]);
   };
 
@@ -113,9 +113,9 @@ public:
 
   void addNoise(double & aDigiE, const unsigned & alay, TH1F * & hist);
   
-  unsigned adcConverter(double eMIP, DetectorEnum adet);
+  unsigned adcConverter(double eMIP, DetectorEnum::DetectorEnum adet);
 
-  double adcToMIP(const unsigned acdCounts, DetectorEnum adet, const bool smear=true);
+  double adcToMIP(const unsigned acdCounts, DetectorEnum::DetectorEnum adet, const bool smear=true);
 
   double MIPtoGeV(const HGCSSSubDetector & adet, 
 		  const double & aMipE);
@@ -132,10 +132,10 @@ private:
   unsigned nTotal_;
   double sigmaPix_;
   TRandom3 rndm_;
-  std::map<DetectorEnum,unsigned> mipToADC_;
-  std::map<DetectorEnum,unsigned> maxADC_;
-  std::map<DetectorEnum,double> timeCut_;
-  std::map<DetectorEnum,double> gainSmearing_;
+  std::map<DetectorEnum::DetectorEnum,unsigned> mipToADC_;
+  std::map<DetectorEnum::DetectorEnum,unsigned> maxADC_;
+  std::map<DetectorEnum::DetectorEnum,double> timeCut_;
+  std::map<DetectorEnum::DetectorEnum,double> gainSmearing_;
   std::map<unsigned,double> noise_;
 
 };

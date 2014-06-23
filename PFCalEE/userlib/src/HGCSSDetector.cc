@@ -145,7 +145,7 @@ void HGCSSDetector::finishInitialisation(){
   printDetector(std::cout);
 }
 
-const HGCSSSubDetector & HGCSSDetector::subDetectorByEnum(DetectorEnum adet){
+const HGCSSSubDetector & HGCSSDetector::subDetectorByEnum(DetectorEnum::DetectorEnum adet){
   if (enumMap_.find(adet) == enumMap_.end()){
     std::cerr << " -- Error ! Trying to access subdetector enum not present in this detector: "
 	      << adet 

@@ -15,7 +15,7 @@ HGCSSGeometryConversion::HGCSSGeometryConversion(std::string filePath, int model
   
 }
 
-unsigned HGCSSGeometryConversion::getNumberOfSiLayers(const DetectorEnum type,
+unsigned HGCSSGeometryConversion::getNumberOfSiLayers(const DetectorEnum::DetectorEnum type,
 						      const double & eta) const
 {
   if (model_ != 2) return 3;
@@ -38,7 +38,7 @@ unsigned HGCSSGeometryConversion::getNumberOfSiLayers(const DetectorEnum type,
 }
 
 HGCSSGeometryConversion::~HGCSSGeometryConversion(){
-  std::map<DetectorEnum,std::vector<TH2D *> >::iterator liter =
+  std::map<DetectorEnum::DetectorEnum,std::vector<TH2D *> >::iterator liter =
     HistMapE_.begin();
   for (; liter !=HistMapE_.end();++liter){
     deleteHistos(liter->second);
@@ -95,7 +95,7 @@ void HGCSSGeometryConversion::setGranularity(const std::vector<unsigned> & granu
    }
  }
 
-void HGCSSGeometryConversion::fill(const DetectorEnum type,
+void HGCSSGeometryConversion::fill(const DetectorEnum::DetectorEnum type,
 				   const unsigned newlayer,
 				   const double & weightedE,
 				   const double & aTime,

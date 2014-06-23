@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <cstdlib>
 
 #include "G4SiHit.hh"
 

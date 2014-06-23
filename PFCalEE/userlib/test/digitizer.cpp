@@ -357,7 +357,7 @@ int main(int argc, char** argv){//main
     
 
     unsigned prevLayer = 10000;
-    DetectorEnum type = DetectorEnum::FECAL;
+    DetectorEnum::DetectorEnum type = DetectorEnum::FECAL;
     unsigned subdetLayer=0;
     for (unsigned iH(0); iH<(*hitvec).size(); ++iH){//loop on hits
       HGCSSSimHit lHit = (*hitvec)[iH];
@@ -409,7 +409,7 @@ int main(int argc, char** argv){//main
       TH2D *histTime = geomConv.get2DHist(iL,"Time");
       TH2D *histZ = geomConv.get2DHist(iL,"Z");
       const HGCSSSubDetector & subdet = myDetector.subDetectorByLayer(iL);
-      DetectorEnum adet = subdet.type;
+      DetectorEnum::DetectorEnum adet = subdet.type;
       bool isScint = subdet.isScint;
       bool isSi = subdet.isSi;
       nTotBins += histE->GetNbinsX()*histE->GetNbinsY();

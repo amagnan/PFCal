@@ -27,12 +27,12 @@ public:
     return cellSize_;
   };
 
-  unsigned getNumberOfSiLayers(const DetectorEnum type,
+  unsigned getNumberOfSiLayers(const DetectorEnum::DetectorEnum type,
 			       const double & eta=0) const;
 
   void initialiseHistos(const bool recreate=false);
 
-  void fill(const DetectorEnum type,
+  void fill(const DetectorEnum::DetectorEnum type,
 	    const unsigned newlayer,
 	    const double & weightedE,
 	    const double & aTime,
@@ -57,15 +57,15 @@ public:
 
   TH2D * get2DHist(const unsigned layer,std::string name);
 
-  inline std::vector<TH2D *> & get2DEnergyVec(const DetectorEnum aDet){
+  inline std::vector<TH2D *> & get2DEnergyVec(const DetectorEnum::DetectorEnum aDet){
     return HistMapE_[aDet];
   };
 
-  inline std::vector<TH2D *> & get2DTimeVec(const DetectorEnum aDet){
+  inline std::vector<TH2D *> & get2DTimeVec(const DetectorEnum::DetectorEnum aDet){
     return HistMapTime_[aDet];
   };
 
-  inline std::vector<TH2D *> & get2DZposVec(const DetectorEnum aDet){
+  inline std::vector<TH2D *> & get2DZposVec(const DetectorEnum::DetectorEnum aDet){
     return HistMapZ_[aDet];
   };
 
@@ -76,11 +76,11 @@ private:
   std::vector<unsigned> granularity_;
   unsigned model_;
 
-  std::map<DetectorEnum,std::vector<TH2D *> > HistMapE_;
-  std::map<DetectorEnum,std::vector<TH2D *> > HistMapTime_;
-  std::map<DetectorEnum,std::vector<TH2D *> > HistMapZ_;
-  std::map<DetectorEnum,std::vector<double> > avgMapZ_;
-  std::map<DetectorEnum,std::vector<double> > avgMapE_;
+  std::map<DetectorEnum::DetectorEnum,std::vector<TH2D *> > HistMapE_;
+  std::map<DetectorEnum::DetectorEnum,std::vector<TH2D *> > HistMapTime_;
+  std::map<DetectorEnum::DetectorEnum,std::vector<TH2D *> > HistMapZ_;
+  std::map<DetectorEnum::DetectorEnum,std::vector<double> > avgMapZ_;
+  std::map<DetectorEnum::DetectorEnum,std::vector<double> > avgMapE_;
 };
 
 

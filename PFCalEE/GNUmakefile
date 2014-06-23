@@ -29,12 +29,12 @@ include $(G4INSTALL)/config/binmake.gmk
 #    CPPFLAGS += -DG4LIB_USE_PYTHIA
 #endif
 
-INCFLAGS += -I$(HEPMC_DIR)/include/
+INCFLAGS += -I$(HEPMC_DIR)/include/ -I$(HEPMC_DIR)/include/HepMC/
 
 ifdef G4LIB_USE_PYTHIA
-      LDLIBS1 += -L$(HEPMC_DIR)/lib -lHepMC -lHepMCfio -L$(G4TMPDIR) -lPythia6 -lg2c
+      LDLIBS1 += -L$(HEPMC_DIR)/lib -lHepMCfio -lHepMC -L$(G4TMPDIR) -lPythia6 -lg2c
 else
-      LDLIBS1 += -L$(HEPMC_DIR)/lib -lHepMC -lHepMCfio #$(G4TMPDIR)/HEPEvtcom.o
+      LDLIBS1 += -L$(HEPMC_DIR)/lib -lHepMC #$(G4TMPDIR)/HEPEvtcom.o
 endif
 
 
