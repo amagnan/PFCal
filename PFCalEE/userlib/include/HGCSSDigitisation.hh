@@ -2,6 +2,7 @@
 #define HGCSSDigitisation_h
 
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -17,6 +18,7 @@ public:
     seed_(0),
     npe_(11),
     crossTalk_(0.25),
+    ipXtalk_(0.025),
     nTotal_(1156),
     sigmaPix_(3)
   {
@@ -30,16 +32,17 @@ public:
     maxADC_[DetectorEnum::FHCAL] = 65535;
     maxADC_[DetectorEnum::BHCAL1] = 65535;
     maxADC_[DetectorEnum::BHCAL2] = 65535;
-    mipToADC_[DetectorEnum::FECAL] = 4;//ADC per mips.
-    mipToADC_[DetectorEnum::MECAL] = 4;
-    mipToADC_[DetectorEnum::BECAL] = 4;
-    mipToADC_[DetectorEnum::FHCAL] = 50;
-    mipToADC_[DetectorEnum::BHCAL1] = 50;
-    mipToADC_[DetectorEnum::BHCAL2] = 50;
-    timeCut_[DetectorEnum::FECAL] = 20;//ns
-    timeCut_[DetectorEnum::MECAL] = 20;//ns
-    timeCut_[DetectorEnum::BECAL] = 20;//ns
-    timeCut_[DetectorEnum::FHCAL] = 150;//ns
+    //mipToADC_[DetectorEnum::FECAL] = 8.2;//ADC per mips.
+    mipToADC_[DetectorEnum::FECAL] = 10;//ADC per mips.
+    mipToADC_[DetectorEnum::MECAL] = 10;
+    mipToADC_[DetectorEnum::BECAL] = 10;
+    mipToADC_[DetectorEnum::FHCAL] = 10;
+    mipToADC_[DetectorEnum::BHCAL1] = 10;
+    mipToADC_[DetectorEnum::BHCAL2] = 10;
+    timeCut_[DetectorEnum::FECAL] = 25;//ns
+    timeCut_[DetectorEnum::MECAL] = 25;//ns
+    timeCut_[DetectorEnum::BECAL] = 25;//ns
+    timeCut_[DetectorEnum::FHCAL] = 25;//ns
     timeCut_[DetectorEnum::BHCAL1] = 150;//ns
     timeCut_[DetectorEnum::BHCAL2] = 150;//ns
     gainSmearing_[DetectorEnum::FECAL] = 0.02;//2% intercalibration
@@ -49,9 +52,20 @@ public:
     gainSmearing_[DetectorEnum::BHCAL1] = 0.02;
     gainSmearing_[DetectorEnum::BHCAL2] = 0.02;
 
+    Print(std::cout);
+
   };
 
   ~HGCSSDigitisation(){};
+
+  inline void setIntercalibrationFactor(const unsigned icFactor){
+    gainSmearing_[DetectorEnum::FECAL] = icFactor/100.;
+    gainSmearing_[DetectorEnum::MECAL] = icFactor/100.;
+    gainSmearing_[DetectorEnum::BECAL] = icFactor/100.;
+    gainSmearing_[DetectorEnum::FHCAL] = icFactor/100.;
+    gainSmearing_[DetectorEnum::BHCAL1] = icFactor/100.;
+    gainSmearing_[DetectorEnum::BHCAL2] = icFactor/100.;
+  };
 
   inline void setRandomSeed(const unsigned aSeed){
     seed_ = aSeed;
@@ -64,6 +78,10 @@ public:
 
   inline void setCrossTalk(const double & aCrossTalk){
     crossTalk_ = aCrossTalk;
+  };
+
+  inline void setIPCrossTalk(const double & aCrossTalk){
+    ipXtalk_ = aCrossTalk;
   };
 
   inline void setNTotalPixels(const unsigned & aN){
@@ -100,16 +118,24 @@ public:
 
   unsigned nRandomPhotoElec(const double & aMipE);
 
-  double nPixels(const double & aMipE);
+  unsigned nPixels(const double & aMipE);
 
-  double positiveRandomGaus(const double & mean);
+  unsigned positiveRandomGaus(const unsigned & mean);
 
   double mipCor(const double & aMipE,
 		const double & posx, 
 		const double & posy,
 		const double & posz);
 
+  double digiE(const double & aMipE,
+	       TH2F * & p_pixvspe,
+	       TH1F * & p_npixels,
+	       TH1F * & p_npixelssmeared,
+	       TH2F * & p_outvsnpix);
+
   double digiE(const double & aMipE);
+
+  double ipXtalk(const std::vector<double> & aSimEvec);
 
   void addNoise(double & aDigiE, const unsigned & alay, TH1F * & hist);
   
@@ -129,8 +155,9 @@ private:
   unsigned seed_;
   unsigned npe_;
   double crossTalk_;
+  double ipXtalk_;
   unsigned nTotal_;
-  double sigmaPix_;
+  unsigned sigmaPix_;
   TRandom3 rndm_;
   std::map<DetectorEnum,unsigned> mipToADC_;
   std::map<DetectorEnum,unsigned> maxADC_;

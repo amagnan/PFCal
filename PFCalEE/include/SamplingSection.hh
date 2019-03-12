@@ -25,17 +25,21 @@ public:
     Total_thick = 0;
     n_sens_elements=0;
     n_elements=0;
+    n_sectors=0;
     ele_thick.clear();
     ele_name.clear();
     ele_X0.clear();
     ele_L0.clear();
     ele_vol.clear();
+    hasScintillator = false;
     for (unsigned ie(0);  ie<aThicknessVec.size(); ++ie){
       //consider only material with some non-0 width...
       if (aThicknessVec[ie]>0){
 	ele_thick.push_back(aThicknessVec[ie]);
 	ele_name.push_back(aMaterialVec[ie]);
+	if (aMaterialVec[ie]== "Scintillator") hasScintillator = true;
 	ele_X0.push_back(0);
+	ele_dEdx.push_back(0);
 	ele_L0.push_back(0);
 	ele_vol.push_back(0);
 	Total_thick+=aThicknessVec[ie];
@@ -50,15 +54,24 @@ public:
       }
     }
     sens_HitVec_size_max = 0;
+    sc_HitVec_size_max = 0;
     resetCounters();
 
     std::cout << " -- End of sampling section initialisation. Input " << aThicknessVec.size() << " elements, constructing " << n_elements << " elements with " << n_sens_elements << " sensitive elements." << std::endl;
 
-  }
+  };
 
   //DTOR
-  ~SamplingSection() { }
-  
+  ~SamplingSection() { };
+
+  inline void setNumberOfSectors(const unsigned nSec){
+    n_sectors = nSec;
+    ele_vol.clear();
+    for (unsigned ie(0);  ie<n_elements*n_sectors; ++ie){
+      ele_vol.push_back(0);
+    }
+  };
+
   //
   void add(G4double den, G4double dl, 
 	   G4double globalTime,G4int pdgId,
@@ -68,13 +81,14 @@ public:
 	   G4int layerId);
   
   inline bool isSensitiveElement(const unsigned & aEle){
-    if (aEle < n_elements && 
+    if (aEle < n_elements &&
 	(ele_name[aEle] == "Si" || ele_name[aEle] == "Scintillator")
 	) return true;
     return false;
   };
 
   inline unsigned getSensitiveLayerIndex(std::string astr){
+    if (astr.find("_")== astr.npos) return 0;
     size_t pos = astr.find("phys");
     //std::cout << astr << " " << pos << std::endl;
     if (pos != astr.npos && pos>1) {
@@ -86,20 +100,24 @@ public:
   };
 
   inline G4Colour g4Colour(const unsigned & aEle){
-    if (isSensitiveElement(aEle)) return G4Colour::White();
-    if (ele_name[aEle] == "Cu") return G4Colour::Black();
-    if (isAbsorberElement(aEle)) return G4Colour::Gray();
-    if (ele_name[aEle] == "PCB") return G4Colour::Blue();
-    if (ele_name[aEle] == "Air") return G4Colour::Cyan();
+    if (isSensitiveElement(aEle)) return G4Colour::Red();
+    else if (ele_name[aEle] == "Cu") return G4Colour::Black();
+    else if (ele_name[aEle] == "CuExtra") return G4Colour::Magenta();
+    else if (isAbsorberElement(aEle)) return G4Colour::Gray();
+    else if (ele_name[aEle] == "PCB") return G4Colour::Blue();
+    else if (ele_name[aEle] == "Air") return G4Colour::Cyan();
     return G4Colour::Yellow();
   };
 
   inline bool isAbsorberElement(const unsigned & aEle){
     if (aEle < n_elements && 
 	(
-	 ele_name[aEle] == "Pb" || ele_name[aEle] == "Cu" || 
+	 ele_name[aEle] == "Pb" || ele_name[aEle] == "Cu" ||
+	 ele_name[aEle] == "CuExtra" || 
 	 ele_name[aEle] == "W" || ele_name[aEle] == "Brass" ||
-	 ele_name[aEle] == "Fe" || ele_name[aEle] == "Steel" 
+	 ele_name[aEle] == "Fe" || ele_name[aEle] == "Steel" || 
+	 ele_name[aEle] == "SSteel" || ele_name[aEle] == "Al" ||
+	 ele_name[aEle] == "WCu" || ele_name[aEle] == "NeutMod"
 	 )
 	) return true;
     return false;
@@ -110,6 +128,10 @@ public:
   {
     ele_den.resize(n_elements,0);
     ele_dl.resize(n_elements,0);
+    for (unsigned idx(0); idx<n_elements; ++idx){
+      ele_den[idx] = 0;
+      ele_dl[idx] = 0;
+    }
     sens_time.resize(n_sens_elements,0);
     sens_gFlux.resize(n_sens_elements,0);
     sens_eFlux.resize(n_sens_elements,0);
@@ -118,6 +140,12 @@ public:
     sens_hadFlux.resize(n_sens_elements,0);
     //reserve some space based on first event....
     for (unsigned idx(0); idx<n_sens_elements; ++idx){
+      sens_time[idx]=0;
+      sens_gFlux[idx]=0;
+      sens_eFlux[idx]=0;
+      sens_muFlux[idx]=0;
+      sens_neutronFlux[idx]=0;
+      sens_hadFlux[idx]=0;
       if (sens_HitVec[idx].size() > sens_HitVec_size_max) {
 	sens_HitVec_size_max = 2*sens_HitVec[idx].size();
 	G4cout << "-- SamplingSection::resetCounters(), space reserved for HitVec vector increased to " << sens_HitVec_size_max << G4endl;
@@ -125,13 +153,21 @@ public:
       sens_HitVec[idx].clear();
       sens_HitVec[idx].reserve(sens_HitVec_size_max);
     }
-  }
+
+    if (supportcone_HitVec.size() > sc_HitVec_size_max) {
+      sc_HitVec_size_max = 2*supportcone_HitVec.size();
+      G4cout << "-- SamplingSection::resetCounters(), space reserved for AluHitVec vector increased to " << sc_HitVec_size_max << G4endl;
+    }
+    supportcone_HitVec.clear();
+    supportcone_HitVec.reserve(sc_HitVec_size_max);
+  };
   
   //
   G4double getMeasuredEnergy(bool weighted=true);
   G4double getAbsorbedEnergy();
   G4double getTotalEnergy();
   G4double getAbsorberX0();  
+  G4double getAbsorberdEdx();  
   G4double getAbsorberLambda();
   G4double getHadronicFraction();
   G4double getNeutronFraction();
@@ -143,25 +179,34 @@ public:
   G4double getTotalSensE();
 
   const G4SiHitVec & getSiHitVec(const unsigned & idx) const;
+  const G4SiHitVec & getAlHitVec() const;
   void trackParticleHistory(const unsigned & idx,const G4SiHitVec & incoming);
 
   //
   void report(bool header=false);
 
-  //members
+  //members, all public
   unsigned n_elements;
+  unsigned n_sectors;
   unsigned n_sens_elements;
   std::vector<G4double>           ele_thick;
   std::vector<std::string>        ele_name;
   std::vector<G4double>           ele_X0;
+  std::vector<G4double>           ele_dEdx;
   std::vector<G4double>           ele_L0;
   std::vector<G4double>           ele_den;
   std::vector<G4double>           ele_dl;
   std::vector<G4VPhysicalVolume*> ele_vol;
+  G4VPhysicalVolume* supportcone_vol;
+  G4VPhysicalVolume* dummylayer_vol;
   std::vector<G4double>           sens_gFlux, sens_eFlux, sens_muFlux, sens_neutronFlux, sens_hadFlux, sens_time;
   G4double Total_thick;
   std::vector<G4SiHitVec> sens_HitVec;
+  G4SiHitVec supportcone_HitVec;
   unsigned sens_HitVec_size_max;
+  unsigned sc_HitVec_size_max;
+  bool hasScintillator;
+  double sensitiveZ;
 
 
 };

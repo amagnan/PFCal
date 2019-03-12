@@ -32,33 +32,33 @@ int plotGlobalCor(){//main
   //TString scenario[nS] = {"0","1","2","3","4","5","6"};
   const unsigned nS = 1;
   std::string scenario[nS] = {
-    "pi-/twiceSampling/GeVCal/EarlyDecay/MipThresh_0p5/"
+    "pi-/"
   };
   
   const unsigned nV = 1;
   TString version[nV] = {"23"};
 
-  TString pSuffix = "all";
+  TString pSuffix = "";
 
   const unsigned nLayers = 54;//64 //54
-  const unsigned nHcalLayers = 38;
+  //const unsigned nHcalLayers = 38;
 
   unsigned genEn[]={//10,30,80};
-      10,15,18,20,25,
-      30,35,40,45,50,
-      60,80};//,100,200,300,400,500
+    10,15,18,20,25,
+    30,35,40,45,50,
+    60,80};//,100,200,300,400,500
   //,1000,2000};
-  //unsigned genEn[]={10,25,40,50,60,80,100,150,200,300,400,500};//,1000,2000};
+  //unsigned genEn[]={10,15,20,25,30,40,50,60,80,100,150,200,300,400,500};//,1000,2000};
   //unsigned genEn[]={50,100,150,200};
   //unsigned genEn[]={10,80};
   unsigned nGenEn=sizeof(genEn)/sizeof(unsigned);
 
   //const unsigned nLimits = 1;//5;
   //const double pElim[nLimits] = {5};
-  const unsigned nLimits = 10;//5;
-  const double pElim[nLimits] = {5,6,7,8,9,10,11,12,13,14};
+  const unsigned nLimits = 9;//5;
+  const double pElim[nLimits] = {5,7.5,10,15,20,25,30,35,40};//,45,50,60,70,80};
 
-  const unsigned limRef = 0;
+  const unsigned limRef = 2;
 
   std::ostringstream lName;
 
@@ -71,9 +71,9 @@ int plotGlobalCor(){//main
     myc[iC] = new TCanvas(lName.str().c_str(),lName.str().c_str(),1000,700);
   }
   myc[0]->Divide(3,2);
-  myc[1]->Divide(4,3);
-  myc[2]->Divide(4,3);
-  myc[3]->Divide(4,3);
+  myc[1]->Divide(3,3);
+  myc[2]->Divide(5,3);
+  myc[3]->Divide(5,3);
   myc[4]->Divide(2,1);
 
 
@@ -82,18 +82,8 @@ int plotGlobalCor(){//main
   for (unsigned iV(0); iV<nV;++iV){//loop on versions
     for (unsigned iS(0); iS<nS;++iS){//loop on scenarios
     
-      TString plotDir = "../PLOTS/version"+version[iV]+"/"+scenario[iS]+"/";
+      TString plotDir = "../PLOTS/gitV00-02-04/version"+version[iV]+"/"+scenario[iS]+"/";
       
-      lName.str("");
-      lName << plotDir << "CalibHcalHistos_" << pSuffix << ".root";
-      TFile *inputFile = TFile::Open(lName.str().c_str());
-      if (!inputFile) {
-	std::cout << " -- Error, input file " << lName.str() << " cannot be opened. Going to next..." << std::endl;
-	continue;
-	//return 1;
-      }
-
-
       TH1F *p_hitSpectrum_lowTail[nGenEn];
       TH1F *p_hitSpectrum_highTail[nGenEn];
       TH1F *p_hitSpectrum_ratio[nGenEn];
@@ -149,55 +139,63 @@ int plotGlobalCor(){//main
 	genEnErr[iE] = 0;
 	grgenEn[iE] = genEn[iE];
 
+	lName.str("");
+	lName << plotDir << "globalCompensation_e" << genEn[iE] << pSuffix << ".root";
+	TFile *inputFile = TFile::Open(lName.str().c_str());
+	if (!inputFile) {
+	  std::cout << " -- Error, input file " << lName.str() << " cannot be opened. Going to next..." << std::endl;
+	  continue;
+	  //return 1;
+	}
 
 	lName.str("");
-	lName << "p_hitSpectrum_lowTail_" << genEn[iE];
+	lName << "p_hitSpectrum_lowTail";
 	p_hitSpectrum_lowTail[iE]  = (TH1F*)gDirectory->Get(lName.str().c_str());
 	if (!checkHistPointer(p_hitSpectrum_lowTail[iE],lName.str())) return 1;
 	p_hitSpectrum_lowTail[iE]->Scale(1./p_hitSpectrum_lowTail[iE]->GetEntries());
 
 	lName.str("");
-	lName << "p_hitSpectrum_highTail_" << genEn[iE];
+	lName << "p_hitSpectrum_highTail";
 	p_hitSpectrum_highTail[iE]  = (TH1F*)gDirectory->Get(lName.str().c_str());
 	if (!checkHistPointer(p_hitSpectrum_highTail[iE],lName.str())) return 1;
 	p_hitSpectrum_highTail[iE]->Scale(1./p_hitSpectrum_highTail[iE]->GetEntries());
 
 	lName.str("");
-	lName << "p_hitSpectrum_ratio_" << genEn[iE];
+	lName << "p_hitSpectrum_ratio";
 	p_hitSpectrum_ratio[iE] = (TH1F*)p_hitSpectrum_highTail[iE]->Clone(lName.str().c_str());
 	p_hitSpectrum_ratio[iE]->Divide(p_hitSpectrum_highTail[iE],p_hitSpectrum_lowTail[iE]);
 
 	lName.str("");
-	lName << "p_meanHitSpectrum_lowTail_" << genEn[iE];
+	lName << "p_meanHitSpectrum_lowTail";
 	p_meanHitSpectrum_lowTail[iE]  = (TH1F*)gDirectory->Get(lName.str().c_str());
 	if (!checkHistPointer(p_meanHitSpectrum_lowTail[iE],lName.str())) return 1;
 	p_meanHitSpectrum_lowTail[iE]->Scale(1./p_meanHitSpectrum_lowTail[iE]->GetEntries());
 
 	lName.str("");
-	lName << "p_meanHitSpectrum_highTail_" << genEn[iE];
+	lName << "p_meanHitSpectrum_highTail";
 	p_meanHitSpectrum_highTail[iE]  = (TH1F*)gDirectory->Get(lName.str().c_str());
 	if (!checkHistPointer(p_meanHitSpectrum_highTail[iE],lName.str())) return 1;
 	p_meanHitSpectrum_highTail[iE]->Scale(1./p_meanHitSpectrum_highTail[iE]->GetEntries());
 
 	for (unsigned iLim(0); iLim<nLimits;++iLim){
 	  lName.str("");
-	  lName << "p_Cglobal_" << genEn[iE] << "_" << iLim;
+	  lName << "p_Cglobal_" << iLim;
 	  p_Cglobal[iE][iLim] =  (TH1F*)gDirectory->Get(lName.str().c_str());
 	  if (!checkHistPointer(p_Cglobal[iE][iLim],lName.str())) return 1;
 	  
 	  lName.str("");
-	  lName << "p_Eshower_" << genEn[iE] << "_" << iLim;
+	  lName << "p_Eshower_" << iLim;
 	  p_Eshower[iE][iLim] = (TH1F*)gDirectory->Get(lName.str().c_str());
 	  if (!checkHistPointer(p_Eshower[iE][iLim],lName.str())) return 1;
 	  
 	  lName.str("");
-	  lName << "p_EvsCglobal_" << genEn[iE] << "_" << iLim;
+	  lName << "p_EvsCglobal_" << iLim;
 	  p_EvsCglobal[iE][iLim] = (TH2F*)gDirectory->Get(lName.str().c_str());
 	  if (!checkHistPointer(p_EvsCglobal[iE][iLim],lName.str())) return 1;
 	}
 	
 	lName.str("");
-	lName << "p_Etotal_" << genEn[iE];
+	lName << "p_ErecoTotal";
 	p_Etotal[iE] = (TH1F*)gDirectory->Get(lName.str().c_str());
 	if (!checkHistPointer(p_Etotal[iE],lName.str())) return 1;
 
@@ -205,17 +203,20 @@ int plotGlobalCor(){//main
 
 	sprintf(buf,"#pi^{-} %d GeV",genEn[iE]);
 
-	myc[0]->cd(1);
+	//myc[0]->cd(6);
 	p_hitSpectrum_lowTail[iE]->SetLineColor(4);
 	p_hitSpectrum_highTail[iE]->SetLineColor(2);
 	//p_hitSpectrum_lowTail[iE]->SetLineWidth(iE%3+1);
-	p_hitSpectrum_lowTail[iE]->GetXaxis()->SetRangeUser(0.5,15);
-	//p_hitSpectrum_lowTail[iE]->GetYaxis()->SetRangeUser(0,0.025);
 	p_hitSpectrum_lowTail[iE]->GetYaxis()->SetTitle("bin Entries / Entries");
 	p_hitSpectrum_lowTail[iE]->SetTitle(buf);
+	p_hitSpectrum_lowTail[iE]->Rebin(4);
+	p_hitSpectrum_highTail[iE]->Rebin(4);
+	p_hitSpectrum_lowTail[iE]->GetXaxis()->SetRangeUser(0.5,20);
+	p_hitSpectrum_highTail[iE]->GetXaxis()->SetRangeUser(0.5,20);
+	//p_hitSpectrum_lowTail[iE]->GetYaxis()->SetRangeUser(0,0.025);
 
 	p_hitSpectrum_ratio[iE]->GetYaxis()->SetTitle("Ratio highTail/LowTail");
-	p_hitSpectrum_ratio[iE]->GetXaxis()->SetRangeUser(0.5,15);
+	p_hitSpectrum_ratio[iE]->GetXaxis()->SetRangeUser(0.5,20);
 	p_hitSpectrum_ratio[iE]->GetYaxis()->SetRangeUser(0.,2.);
 	if (genEn[iE]==10) {
 	  myc[0]->cd(1);
@@ -225,6 +226,8 @@ int plotGlobalCor(){//main
 	  leg->AddEntry(p_hitSpectrum_highTail[iE],"Eevent > Emean+sigma","L");
 	  leg->Draw("same");
 	  myc[0]->cd(4);
+	  gPad->SetGridx(1);
+	  gPad->SetGridy(1);
 	  p_hitSpectrum_ratio[iE]->Draw("");
 	}
 	else if (genEn[iE]==30){
@@ -232,6 +235,8 @@ int plotGlobalCor(){//main
 	  p_hitSpectrum_lowTail[iE]->Draw("");
 	  p_hitSpectrum_highTail[iE]->Draw("same");
 	  myc[0]->cd(5);
+	  gPad->SetGridx(1);
+	  gPad->SetGridy(1);
 	  p_hitSpectrum_ratio[iE]->Draw("");
 	}
 	else if (genEn[iE]==80){
@@ -239,31 +244,28 @@ int plotGlobalCor(){//main
 	  p_hitSpectrum_lowTail[iE]->Draw("");
 	  p_hitSpectrum_highTail[iE]->Draw("same");
 	  myc[0]->cd(6);
+	  gPad->SetGridx(1);
+	  gPad->SetGridy(1);
 	  p_hitSpectrum_ratio[iE]->Draw("");
 	}
-
-	myc[1]->cd(iE+1);
-	p_EvsCglobal[iE][limRef]->RebinX(10);
-	p_EvsCglobal[iE][limRef]->RebinY(10);
-	p_EvsCglobal[iE][limRef]->GetXaxis()->SetRangeUser(p_Cglobal[iE][limRef]->GetMean()-5*p_Cglobal[iE][limRef]->GetRMS(),p_Cglobal[iE][limRef]->GetMean()+5*p_Cglobal[iE][limRef]->GetRMS());
-	p_EvsCglobal[iE][limRef]->GetYaxis()->SetRangeUser(p_Etotal[iE]->GetMean()-5*p_Etotal[iE]->GetRMS(),p_Etotal[iE]->GetMean()+5*p_Etotal[iE]->GetRMS());
-	p_EvsCglobal[iE][limRef]->SetTitle(buf);
-	p_EvsCglobal[iE][limRef]->Draw("colz");
 
 	myc[2]->cd(iE+1);
 	p_Eshower[iE][limRef]->SetMarkerStyle(20);
 	p_Eshower[iE][limRef]->SetMarkerColor(1);
-	p_Eshower[iE][limRef]->Rebin(10);
+	p_Eshower[iE][limRef]->Rebin(1);
 	double minx = std::min(p_Eshower[iE][limRef]->GetMean()-5*p_Eshower[iE][limRef]->GetRMS(),
 			       p_Etotal[iE]->GetMean()-5*p_Etotal[iE]->GetRMS());
 	double maxx = std::max(p_Eshower[iE][limRef]->GetMean()+5*p_Eshower[iE][limRef]->GetRMS(),
 			       p_Etotal[iE]->GetMean()+5*p_Etotal[iE]->GetRMS());
 	p_Eshower[iE][limRef]->GetXaxis()->SetRangeUser(minx,maxx);
+	p_Eshower[iE][limRef]->SetMaximum(std::max(p_Eshower[iE][limRef]->GetMaximum(),p_Etotal[iE]->GetMaximum()));
 	p_Eshower[iE][limRef]->Draw("PE");
 	p_Etotal[iE]->SetMarkerStyle(21);
 	p_Etotal[iE]->SetMarkerColor(2);
-	p_Etotal[iE]->Rebin(10);
+	p_Etotal[iE]->Rebin(1);
+	//p_Etotal[iE]->Scale(p_Eshower[iE][limRef]->GetEntries()/p_Etotal[iE]->GetEntries());
 	p_Etotal[iE]->Draw("PEsame");
+	std::cout << "shower " << p_Eshower[iE][limRef]->GetEntries() << " reco " << p_Etotal[iE]->GetEntries() << std::endl;
 
 	myc[6]->cd();
 	gStyle->SetOptStat("MRuoi");
@@ -297,6 +299,18 @@ int plotGlobalCor(){//main
 	  reso[iLim]->SetPointError(np,0,lresoErr);
 	}
 
+	if (genEn[iE] == 40){
+	  for (unsigned iLim(0); iLim<nLimits;++iLim){
+	    myc[1]->cd(iLim+1);
+	    //p_EvsCglobal[iE][iLim]->RebinX(2);
+	    //p_EvsCglobal[iE][iLim]->RebinY(2);
+	    p_EvsCglobal[iE][iLim]->GetXaxis()->SetRangeUser(p_Cglobal[iE][iLim]->GetMean()-5*p_Cglobal[iE][iLim]->GetRMS(),p_Cglobal[iE][iLim]->GetMean()+5*p_Cglobal[iE][iLim]->GetRMS());
+	    p_EvsCglobal[iE][iLim]->GetYaxis()->SetRangeUser(p_Etotal[iE]->GetMean()-5*p_Etotal[iE]->GetRMS(),p_Etotal[iE]->GetMean()+5*p_Etotal[iE]->GetRMS());
+	    p_EvsCglobal[iE][iLim]->SetTitle(buf);
+	    p_EvsCglobal[iE][iLim]->Draw("colz");
+	  }
+	}
+
 	Int_t np = reso[nLimits]->GetN();
 	reso[nLimits]->SetPoint(np,1/sqrt(genEn[iE]),p_Etotal[iE]->GetRMS()/p_Etotal[iE]->GetMean());
 	reso[nLimits]->SetPointError(np,0,p_Etotal[iE]->GetRMSError()/p_Etotal[iE]->GetMean());
@@ -306,9 +320,9 @@ int plotGlobalCor(){//main
 	p_meanHitSpectrum_lowTail[iE]->SetLineColor(4);
 	p_meanHitSpectrum_highTail[iE]->SetLineColor(2);
 	//p_meanHitSpectrum_lowTail[iE]->SetLineWidth(iE%3+1);
-	p_meanHitSpectrum_lowTail[iE]->Rebin(10);
-	p_meanHitSpectrum_highTail[iE]->Rebin(10);
-	//p_meanHitSpectrum_lowTail[iE]->GetXaxis()->SetRangeUser(0,50);
+	p_meanHitSpectrum_lowTail[iE]->Rebin(2);
+	p_meanHitSpectrum_highTail[iE]->Rebin(2);
+	p_meanHitSpectrum_lowTail[iE]->GetXaxis()->SetRangeUser(0,20);
 	//p_meanHitSpectrum_lowTail[iE]->GetYaxis()->SetRangeUser(0,0.025);
 	p_meanHitSpectrum_lowTail[iE]->GetYaxis()->SetTitle("Normalised entries");
 	p_meanHitSpectrum_lowTail[iE]->SetTitle(buf);
@@ -333,9 +347,9 @@ int plotGlobalCor(){//main
 	  //p_Cglobal[iE][iLim]->SetFillStyle();
 	  //p_Cglobal[iE][iLim]->SetFillColor(lColor[iE]);
 	  p_Cglobal[iE][iLim]->Scale(1./p_Cglobal[iE][iLim]->GetEntries());
-	  p_Cglobal[iE][iLim]->Rebin(4);
-	  p_Cglobal[iE][iLim]->GetXaxis()->SetRangeUser(0.,1.5);
-	  //p_Cglobal[iE][iLim]->GetYaxis()->SetRangeUser(0,300);
+	  p_Cglobal[iE][iLim]->Rebin(8);
+	  p_Cglobal[iE][iLim]->GetXaxis()->SetRangeUser(0.8,1.7);
+	  p_Cglobal[iE][iLim]->GetYaxis()->SetRangeUser(0,0.15);
 
 	  sprintf(buf,"C_{global} (e_{lim} = %1.1f MIP)",pElim[iLim]);
 
@@ -399,6 +413,7 @@ int plotGlobalCor(){//main
       gr->GetXaxis()->SetTitle("Eshower [GeV]");
       gr->Draw("ap");
       TF1 *fitFunc=new TF1("calibFunc","[0]*x+[1]*x*x+[2]*x*x*x",gr->GetXaxis()->GetXmin(),gr->GetXaxis()->GetXmax());
+      fitFunc->SetParameters(0.98,0.002,0);
       fitFunc->SetLineColor(6);
       gr->Fit(fitFunc,"RME");
       TLatex lat;
@@ -432,7 +447,7 @@ int plotGlobalCor(){//main
       gr->GetXaxis()->SetTitle("1/#sqrt{Beam energy} [1/#sqrt{GeV}]");
       gr->GetYaxis()->SetTitle("#sigma/E");
       gr->SetMinimum(0);
-      gr->SetMaximum(0.2);
+      gr->SetMaximum(0.25);
       gr->Draw("ap");
       TF1 *fitFunc2 =new TF1("resoFunc","sqrt([0]*[0]*x*x+[1]*[1])",gr->GetXaxis()->GetXmin(),gr->GetXaxis()->GetXmax());
 

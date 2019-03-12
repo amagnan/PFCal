@@ -16,9 +16,11 @@
 #include "HGCSSSamplingSection.hh"
 #include "HGCSSSimHit.hh"
 #include "HGCSSGenParticle.hh"
+#include "HGCSSGeometryConversion.hh"
 
 #include <vector>
 #include <map>
+#include "fstream"
 
 class RunAction;
 class EventActionMessenger;
@@ -42,19 +44,27 @@ public:
   void Add( std::vector<SamplingSection> *newDetector ) { detector_=newDetector; }
   //Float_t GetCellSize() { return cellSize_; }
 
-  std::string GetFirstVolumeName() const;
+  //std::ofstream & fout() {return fout_;}
+
+  bool isFirstVolume(const std::string volname) const;
 
 private:
   RunAction*  runAct;
   std::vector<SamplingSection> *detector_;
   G4int     evtNb_,printModulo;
+
+  HGCSSGeometryConversion* geomConv_;
+
   TFile *outF_;
   TTree *tree_;
   HGCSSEvent event_;
   HGCSSSamplingSectionVec ssvec_;
   HGCSSSimHitVec hitvec_;
+  HGCSSSimHitVec alhitvec_;
   HGCSSGenParticleVec genvec_;
   EventActionMessenger*  eventMessenger;
+  //std::ofstream fout_;
+  unsigned shape_;
 
 };
 

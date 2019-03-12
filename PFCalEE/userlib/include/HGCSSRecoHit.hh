@@ -9,6 +9,9 @@
 #include "TMath.h"
 
 #include "HGCSSSimHit.hh"
+#include "HGCSSGeometryConversion.hh"
+#include "Math/Point3D.h"
+#include "Math/Point3Dfwd.h"
 
 class HGCSSRecoHit{
 
@@ -21,10 +24,14 @@ public:
     zpos_(0),
     layer_(0),
     //cellid_(0),
-    noiseFrac_(0)
+    noiseFrac_(0),
+    time_(0)
   {};
 
-  HGCSSRecoHit(const HGCSSSimHit & aSimHit, const unsigned granularity=1);
+  HGCSSRecoHit(const HGCSSSimHit & aSimHit, 
+	       const HGCSSSubDetector & subdet,
+	       const HGCSSGeometryConversion & aGeom,
+	       const unsigned & shape);
 
   ~HGCSSRecoHit(){};
 
@@ -32,9 +39,17 @@ public:
     return energy_;
   };
 
+  inline double time() const {
+    return time_;
+  };
+
   double eta() const;
   double theta() const;
   double phi() const;
+
+  inline ROOT::Math::XYZPoint position() const{
+    return ROOT::Math::XYZPoint(xpos_/10.,ypos_/10.,zpos_/10.);
+  };
 
   inline double E() const {
     return energy_;
@@ -58,6 +73,10 @@ public:
 
   inline void energy(const double & energy) {
     energy_ = energy;
+  };
+
+  inline void time(const double & time) {
+    time_ = time;
   };
 
   inline void x(const double & pos){
@@ -160,6 +179,7 @@ private:
   unsigned layer_;
   //unsigned cellid_;
   double noiseFrac_;
+  double time_;
 
   ClassDef(HGCSSRecoHit,1);
 

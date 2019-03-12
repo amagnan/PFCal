@@ -10,3 +10,7 @@
 #pragma link C++ class vector<HGCSSRecoHit>+;
 #pragma link C++ class HGCSSRecoJet+;
 #pragma link C++ class vector<HGCSSRecoJet>+;
+#pragma link C++ class HGCSSCluster+;
+#pragma link C++ class vector<HGCSSCluster>+;
+#pragma link C++ class HGCSSMipHit+;
+#pragma link C++ class vector<HGCSSMipHit>+;

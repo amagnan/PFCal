@@ -1,21 +1,43 @@
 #!/bin/sh
 
-INPATH=root://eoscms//eos/cms/store/user/amagnan/HGCalEEGeant4/gitV00-01-01/
+INPATH=root://eoscms//eos/cms/store/user/amagnan/HGCalEEGeant4/
+#INPATH=root://eoscms//eos/cms/store/user/msun/V12
+GITVERSION=gitV00-02-09
 
-for v in 12
+etaset=(17 19 21 23 25 27 29)
+
+for doPU in 140
 do
-    for p in e-
+counter=0
+    for alpha in 0.361 #0.297 0.244 0.200 0.164 0.134 0.110
     do
-	MYDIR=PLOTS/gitV00-01-01/version$v/$p/
-	mkdir -p $MYDIR
-	for r in 0
+	eta=${etaset[$counter]}
+	echo "counter:$counter, eta=$eta"
+	let counter=$counter+1
+	for v in 12
 	do
-	    #for e in 10 15 18 20 25 30 35 40 45 50 60 80
-	    #for e in 50 60 80 100 150 200 300 400 500
-	    for e in 5 10 15 20 25 30 40 50 60 80 100 200 300 500
+	    for p in gamma
 	    do
-		echo "Processing v${v}_p${p}_e${e}_run${r}"
-		./bin/validation 0 $INPATH/$p/ HGcal_version${v}_model1_BOFF_e${e}.root Digi_version${v}_model1_BOFF_e${e}.root $MYDIR/validation_e${e}.root 4 >& v${v}_p${p}_e${e}.log &
+		t=2
+		MYDIR=PLOTS/$GITVERSION/version$v/$p/${t}00um/
+		mkdir -p $MYDIR
+	    #for r in 0
+	    #do
+		for et in 30 50 70 90 100 150 200
+		do
+		    echo "Processing pu${doPU}_v${v}_p${p}_et${et}" #_run${r}
+		#if (( "$et"!="80" )); then
+		    mkdir -p $MYDIR/eta${eta}_et${et}_pu${doPU}
+		    if (( "$doPU"=="0" ))
+		    then
+			./bin/egammaResolution 0 $INPATH/$GITVERSION/$p/ HGcal_version${v}_model2_BOFF_et${et}_alpha${alpha}.root Digi_version${v}_model2_BOFF_et${et}_alpha${alpha}.root $MYDIR/eta${eta}_et${et}_pu0.root ${t} | tee egreso_eta${eta}_et${et}_pu0.log
+		    else 
+			./bin/egammaResolution 0 $INPATH/$GITVERSION/$p/ HGcal_version${v}_model2_BOFF_et${et}_alpha${alpha}.root PuMix${doPU}_version${v}_model2_BOFF_et${et}_alpha${alpha}.root $MYDIR/eta${eta}_et${et}_pu${doPU}.root ${t} | tee egreso_eta${eta}_et${et}_pu${doPU}.log
+		    fi
+		#else
+		#    ./bin/egammaResolution 0 $INPATH/$GITVERSION/$p/ HGcal_version${v}_model2_BOFF_et${et}_alpha${alpha}.root Digi_version${v}_model2_BOFF_et${et}_alpha${alpha}.root $MYDIR/eta${eta}_et${et}.root ${t} >& egreso_eta${eta}_et${et}.log
+		#fi
+		done
 	    done
 	done
     done

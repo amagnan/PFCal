@@ -9,8 +9,19 @@
 #include <map>
 
 #include "G4SiHit.hh"
+#include "HGCSSGeometryConversion.hh"
+#include "HGCSSDetector.hh"
 
-static const float CELL_SIZE_X=2.5;//mm
+#include "Math/Point3D.h"
+#include "Math/Point3Dfwd.h"
+#include "TH2Poly.h"
+
+//tiny for shower size studies
+//static const float CELL_SIZE_X=0.5;
+//for hexagons: side size.
+static const float CELL_SIZE_X=6.496345; //2.5;//mm
+//small hexagons
+//static const float CELL_SIZE_X=4.76;//mm
 static const float CELL_SIZE_Y=CELL_SIZE_X;
 
 class HGCSSSimHit{
@@ -33,7 +44,7 @@ public:
   {
     
   };
-  HGCSSSimHit(const G4SiHit & aSiHit, const unsigned & asilayer, const float cellSize = CELL_SIZE_X);
+  HGCSSSimHit(const G4SiHit & aSiHit, const unsigned & asilayer, TH2Poly* map, const float cellSize = CELL_SIZE_X, const bool etaphimap = false);
 
   ~HGCSSSimHit(){};
 
@@ -56,6 +67,7 @@ public:
   inline unsigned silayer() const {
     return layer_%3;
   };
+
 
   //re-encode local layer into det layer + si layer if several sensitive layers (up to 3...)
   inline void setLayer(const unsigned & layer, const unsigned & silayer){
@@ -93,68 +105,77 @@ public:
   inline unsigned nHadrons() const {
     return nHadrons_;
   };
-  inline unsigned numberOfParticles() const {
+  inline double numberOfParticles() const {
     return nGammas_+nElectrons_+nMuons_+nNeutrons_+nProtons_+nHadrons_;
   };
 
   inline double gFrac() const {
-    return nGammas_/numberOfParticles();
+    return 1.0*nGammas_/numberOfParticles();
   };
 
   inline double eFrac() const {
-    return nElectrons_/numberOfParticles();
+    return 1.0*nElectrons_/numberOfParticles();
   };
 
   inline  double muFrac() const {
-    return nMuons_/numberOfParticles();
+    return 1.0*nMuons_/numberOfParticles();
   };
 
   inline double neutronFrac() const {
-    return nNeutrons_/numberOfParticles();
+    return 1.0*nNeutrons_/numberOfParticles();
   };
 
   inline double protonFrac() const {
-    return nProtons_/numberOfParticles();
+    return 1.0*nProtons_/numberOfParticles();
   };
 
   inline double hadFrac() const {
-    return nHadrons_/numberOfParticles();
+    return 1.0*nHadrons_/numberOfParticles();
   };
 
   void Add(const G4SiHit & aSiHit);
 
-  void encodeCellId(const bool x_side,const bool y_side,const unsigned x_cell,const unsigned y_cell);
+  //void encodeCellId(const bool x_side,const bool y_side,const unsigned x_cell,const unsigned y_cell);
 
-  inline bool get_x_side() const{
-    return cellid_ & 0x0001;
-  };
+  //inline bool get_x_side() const{
+  //return cellid_ & 0x0001;
+  //};
 
-  inline bool get_y_side() const {
-    return (cellid_ & 0x00010000) >> 16;
-  };
+  //inline bool get_y_side() const {
+  //return (cellid_ & 0x00010000) >> 16;
+  //};
 
-  inline unsigned get_x_cell() const {
-    return (cellid_ & 0xFFFE) >> 1;
-  };
+  //inline unsigned get_x_cell() const {
+  //return (cellid_ & 0xFFFE) >> 1;
+  //};
 
-  inline unsigned get_y_cell() const {
-    return (cellid_ & 0xFFFE0000) >> 17;
-  };
+  //inline unsigned get_y_cell() const {
+  // return (cellid_ & 0xFFFE0000) >> 17;
+  //};
 
-  inline double get_x(const float cellSize = CELL_SIZE_X) const {
-    float sign = get_x_side() ? 1. : -1. ;
-    if (sign > 0)
-      return get_x_cell()*sign*cellSize*getGranularity()+cellSize*getGranularity()/2;
-    else return get_x_cell()*sign*cellSize*getGranularity()-cellSize*getGranularity()/2;
-  };
+  //shape=1 for hexagons, 2 for diamonds and 3 for triangles
+  std::pair<double,double> get_xy(const HGCSSSubDetector & subdet,
+				  const HGCSSGeometryConversion & aGeom,
+				  const unsigned shape) const;
 
-  inline double get_y(const float cellSize = CELL_SIZE_Y) const {
-    float sign = get_y_side() ? 1. : -1. ;
-    if (sign > 0)
-      return get_y_cell()*sign*cellSize*getGranularity()+cellSize*getGranularity()/2;
-    else return get_y_cell()*sign*cellSize*getGranularity()-cellSize*getGranularity()/2;
-  };
+  ROOT::Math::XYZPoint position(const HGCSSSubDetector & subdet,
+				const HGCSSGeometryConversion & aGeom,
+				const unsigned shape) const;
 
+  //inline double get_x(TH2Poly* map) const {
+  //float sign = get_x_side() ? 1. : -1. ;
+  //if (sign > 0)
+  //return get_x_cell()*sign*cellSize*getGranularity()+cellSize*getGranularity()/2;
+  //else return get_x_cell()*sign*cellSize*getGranularity()-cellSize*getGranularity()/2;
+  //};
+
+  //inline double get_y(TH2Poly* map) const {
+    //float sign = get_y_side() ? 1. : -1. ;
+    //if (sign > 0)
+    //return get_y_cell()*sign*cellSize*getGranularity()+cellSize*getGranularity()/2;
+    //else return get_y_cell()*sign*cellSize*getGranularity()-cellSize*getGranularity()/2;
+  //};
+  /*
   inline bool get_x_side_old() const{
     return cellid_ & 0x0001;
   };
@@ -184,12 +205,21 @@ public:
       return get_y_cell_old()*sign*cellSize*getGranularity()+cellSize*getGranularity()/2;
     else return get_y_cell_old()*sign*cellSize*getGranularity()-cellSize*getGranularity()/2;
   };
+  */
 
   inline double get_z() const {
     return zpos_;
   };
 
-  double eta() const;
+  double eta(const HGCSSSubDetector & subdet,
+	     const HGCSSGeometryConversion & aGeom,
+	     const unsigned shape) const;
+  double theta(const HGCSSSubDetector & subdet,
+	       const HGCSSGeometryConversion & aGeom,
+	       const unsigned shape) const;
+  double phi(const HGCSSSubDetector & subdet,
+	     const HGCSSGeometryConversion & aGeom,
+	     const unsigned shape) const;
 
   inline unsigned getGranularity() const{
     return 1;

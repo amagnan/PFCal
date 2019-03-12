@@ -4,7 +4,11 @@
 #include <cmath>
 #include <stdlib.h>
 
-HGCSSRecoHit::HGCSSRecoHit(const HGCSSSimHit & aSimHit, const unsigned granularity){
+
+HGCSSRecoHit::HGCSSRecoHit(const HGCSSSimHit & aSimHit, 
+			   const HGCSSSubDetector & subdet,
+			   const HGCSSGeometryConversion & aGeom,
+			   const unsigned & shape){
   energy_ = aSimHit.energy();
   adcCounts_ = 0;
   zpos_ = aSimHit.get_z();
@@ -13,8 +17,13 @@ HGCSSRecoHit::HGCSSRecoHit(const HGCSSSimHit & aSimHit, const unsigned granulari
   layer_ = aSimHit.layer();
   noiseFrac_ = 0;
 
-  xpos_ = aSimHit.get_x();
-  ypos_ = aSimHit.get_y();
+  std::pair<double,double> xy = aSimHit.get_xy(subdet,aGeom,shape);
+
+  xpos_ = xy.first;
+  ypos_ = xy.second;
+
+  time_ = aSimHit.time();
+
   //cellid encoding:
   //bool x_side = x>0 ? true : false;
   //bool y_side = y>0 ? true : false;
@@ -26,23 +35,15 @@ HGCSSRecoHit::HGCSSRecoHit(const HGCSSSimHit & aSimHit, const unsigned granulari
 
 
 double HGCSSRecoHit::theta() const {
-  return 2*atan(exp(-eta()));
+  return 2*atan(exp(-1.*eta()));
 }
 
 double HGCSSRecoHit::eta() const {
-  double theta = acos(fabs(zpos_)/sqrt(zpos_*zpos_+xpos_*xpos_+ypos_*ypos_));
-  double leta = -log(tan(theta/2.));
-  if (zpos_>0) return leta;
-  else return -leta;
+  return position().eta();
 }
 
 double HGCSSRecoHit::phi() const {
-  double x = get_x();
-  double y = get_y();
-  if (x==0) return 0;
-  if (x>0) return atan(y/x);
-  else if (y>0) return TMath::Pi()+atan(y/x);
-  else return -TMath::Pi()+atan(y/x);
+  return position().phi();
 }
 
 // void HGCSSRecoHit::encodeCellId(const bool x_side,const bool y_side,const unsigned x_cell,const unsigned y_cell, const unsigned granularity){
@@ -61,7 +62,10 @@ double HGCSSRecoHit::phi() const {
 // }
 
 void HGCSSRecoHit::Add(const HGCSSSimHit & aSimHit){
+  time_ = time_*energy_;
   energy_ += aSimHit.energy();
+  time_ += aSimHit.energy()*aSimHit.time();
+  if (energy_>0) time_ = time_/energy_;
 }
 
 void HGCSSRecoHit::Print(std::ostream & aOs) const{
@@ -70,6 +74,7 @@ void HGCSSRecoHit::Print(std::ostream & aOs) const{
       << std::endl
       << " = Energy " << energy_ << " noiseFrac " << noiseFrac_ << std::endl
       << " = Digi E " << adcCounts_ << " adcCounts." << std::endl
+      << " = time " << time_ << std::endl
       << "====================================" << std::endl;
 
 }

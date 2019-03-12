@@ -9,7 +9,8 @@
 #include <map>
 #include <string>
 
-class G4CSGSolid;
+class G4VSolid;
+class G4SubtractionSolid;
 class G4Box;
 class G4LogicalVolume;
 class G4VPhysicalVolume;
@@ -40,24 +41,73 @@ public:
     v_HGCALEE_gap4=10,
     v_HGCALEE_prePCB=11,
     v_HGCALEE_v5=12,
+    v_HGCALEE_v5_gap4=13,
     v_HGCAL=20,
     v_HGCALHE=21,
     v_HGCALHEScint=22,
-    v_HGCALHE_CALICE=23
+    v_HGCALHE_CALICE=23,
+    v_HGCALHE_CMSSWv4=24,
+    v_HGCAL_v5=25,
+    v_HGCAL_v5_gap4=26,
+    v_HGCALHE_v5=27,
+    v_HGCALBE_v5=28,
+    v_HGCALEE_v6=30,
+    v_HGCALHE_v6=31,
+    v_HGCALBE_v6=32,
+    v_HGCAL_v6=33,
+    v_HGCALEE_v624=34,
+    v_HGCALEE_v618=35,
+    v_HGCAL_v624=36,
+    v_HGCAL_v618=37,
+    v_HGCALHE_v624=38,
+    v_HGCALHE_v618=39,
+    v_HGCALEE_v7=40,
+    v_HGCALHE_v7=41,
+    v_HGCALBE_v7=42,
+    v_HGCAL_v7=43,
+    v_HGCALHF=50,
+    v_HGCAL_v7_HF=51,
+    v_HGCALCu_HF=52,
+    v_HGCALEE_v8=60,
+    v_HGCALHE_v8=61,
+    v_HGCALBE_v8=62,
+    v_HGCAL_v8=63,
+    v_HGCALEE_v8_air3=64,
+    v_HGCALEE_v8_Cu=65,
+    v_HGCALEE_v8_Cu_12=66,
+    v_HGCALEE_v8_air4=67,
+    v_HGCALEE_TB=100,
+    v_HGCALEE_TB_gap0=101,
+    v_HGCALEE_TB_allW=102,
+    v_HGCALEE_TB_samedEdx=103,
+    v_HGCAL_2016TB=110,
+    v_testCu=200
   };
 
   enum DetectorModel {
     m_SIMPLE_20=0,
     m_SIMPLE_50=1,
     m_FULLSECTION=2,
-    m_SIMPLE_100=3
+    m_SIMPLE_100=3,
+    m_BOXWITHCRACK_100=4,
+    m_2016TB=5
   };
 
   /**
      @short CTOR
    */
-  DetectorConstruction(G4int ver=DetectorConstruction::v_CALICE, G4int mod=DetectorConstruction::m_SIMPLE_20);
+  DetectorConstruction(G4int ver=DetectorConstruction::v_CALICE, 
+		       G4int mod=DetectorConstruction::m_SIMPLE_20,
+		       G4int shape=1,
+		       //std::string absThickW="1.75,1.75,1.75,1.75,1.75,2.8,2.8,2.8,2.8,2.8,4.2,4.2,4.2,4.2,4.2",
+		       //std::string absThickPb="1,1,1,1,1,2.1,2.1,2.1,2.1,2.1,4.4,4.4,4.4,4.4",
+		       std::string absThickW="",
+		       std::string absThickPb="",
+		       std::string dropLayer="");
 
+  void buildHGCALFHE(const unsigned aVersion);
+  void buildHGCALBHE(const unsigned aVersion);
+  void buildHF();
   /**
      @short calorimeter structure (sampling sections)
    */
@@ -66,8 +116,12 @@ public:
 
   int getModel() const { return model_; }
   int getVersion() const { return version_; }
+  unsigned getShape() const { return shape_; }
+
+
 
   const std::vector<G4LogicalVolume*>  & getSiLogVol() {return m_logicSi; }
+  const std::vector<G4LogicalVolume*>  & getAlLogVol() {return m_logicAl; }
   const std::vector<G4LogicalVolume*>  & getAbsLogVol() {return m_logicAbs; }
 
 
@@ -76,8 +130,9 @@ public:
    */
   void DefineMaterials(); 
   std::map<std::string, G4Material *> m_materials;
+  std::map<std::string, G4double > m_dEdx;
   std::map<std::string, G4Colour > m_colours;
-  
+
   /**
      @short set magnetic field
    */
@@ -89,6 +144,10 @@ public:
    */
 
   void SetDetModel(G4int model);
+
+  void SetWThick(std::string thick);
+  void SetPbThick(std::string thick);
+  void SetDropLayers(std::string layers);
 
   /**
      @short DTOR
@@ -104,6 +163,11 @@ public:
   G4double GetWorldSizeXY() { return m_WorldSizeXY; }
   G4double GetWorldSizeZ()  { return m_WorldSizeZ; }
 
+  G4double GetMinEta() { return m_minEta0; }
+  G4double GetMaxEta() { return m_maxEta0; }
+
+  G4double GetMinEtaLayer(int i) { return minEta[i]; } // etaMin for each layer 0:51
+
   /**
      @short build the detector
    */
@@ -116,9 +180,22 @@ private:
   int version_;
   //integer to define detector model
   int model_;
+  //integer to define shape of simhits: 1=hexa, 2=diamonds, 3=triangles, 4=squares
+  unsigned shape_;
 
   //add a pre PCB plate
   bool addPrePCB_;
+
+  bool doHF_;
+  unsigned firstHFlayer_;
+  unsigned firstMixedlayer_;
+  unsigned firstScintlayer_;
+
+  std::vector<G4double> absThickW_;
+  std::vector<G4double> absThickPb_;
+  std::vector<G4bool> dropLayer_;
+
+  double getEtaFromRZ(const double & r, const double & z);
 
   /**
      @short compute the calor dimensions
@@ -130,20 +207,44 @@ private:
    */
   G4VPhysicalVolume* ConstructCalorimeter();     
 
-  G4CSGSolid *constructSolid (std::string baseName, G4double thick);
- 
+  void buildSectorStack(const unsigned sectorNum,
+			const G4double & minL, 
+			const G4double & width);
+
+  void fillInterSectorSpace(const unsigned sectorNum,
+			    const G4double & minL, 
+			    const G4double & width);
+
+  G4double getCrackOffset(size_t layer);
+  G4double getAngOffset(size_t layer);
+
+  G4SubtractionSolid* constructSolidWithHoles (std::string baseName, G4double thick, const G4double & width);
+  G4VSolid *constructSolid (const unsigned layer, std::string baseName, G4double thick, G4double zpos,const G4double & minL, const G4double & width, const bool isHF=false);
+  G4VSolid *constructSolid (std::string baseName, G4double thick, G4double zpos,const G4double & minL, const G4double & width, const double & etamin, const double & etamax);
+
+  G4VSolid *constructSupportCone (std::string baseName, G4double thick, G4double zpos,const G4double & minL, const G4double & width, const double & etamin);
+  G4VSolid *constructSupportCone (std::string baseName, G4double thick, G4double zpos,const G4double & minL, const G4double & width);
+
   std::vector<G4Material* > m_SensitiveMaterial;
   
   G4double           m_CalorSizeXY, m_CalorSizeZ;
   G4double           m_minRadius,m_maxRadius;
+  G4double           m_minRadiusHF,m_maxRadiusHF;
+  //define per layer
+  std::vector<G4double>           m_minEta,m_maxEta;
+  std::vector<G4double>           minEta; // used to define input eta boundaries in constructor
+  G4double           m_minEta0,m_maxEta0;
+  G4double           m_minEtaHF,m_maxEtaHF;
+  G4double           m_z0pos, m_z0HF;
   G4double           m_WorldSizeXY, m_WorldSizeZ;
-
+  G4double m_nSectors,m_sectorWidth,m_interSectorWidth;
             
-  G4CSGSolid*        m_solidWorld;    //pointer to the solid World 
+  G4VSolid*          m_solidWorld;    //pointer to the solid World 
   G4LogicalVolume*   m_logicWorld;    //pointer to the logical World
   G4VPhysicalVolume* m_physWorld;     //pointer to the physical World  
   
   std::vector<G4LogicalVolume*>   m_logicSi;    //pointer to the logical Si volumes
+  std::vector<G4LogicalVolume*>   m_logicAl;    //pointer to the logical Si volumes
   std::vector<G4LogicalVolume*>   m_logicAbs;    //pointer to the logical absorber volumes situated just before the si
 
   DetectorMessenger* m_detectorMessenger;  //pointer to the Messenger

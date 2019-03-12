@@ -13,6 +13,7 @@ public:
   HGCSSSamplingSection():
     volNb_(0),
     volX0trans_(0),
+    voldEdx_(0),
     volLambdatrans_(0),
     measuredE_(0),
     absorberE_(0),
@@ -23,7 +24,8 @@ public:
     neutronFrac_(0),
     hadFrac_(0),
     avgTime_(0),
-    nSiHits_(0)
+    nSiHits_(0),
+    sensitiveZ_(0)
  {
     
   };
@@ -37,6 +39,11 @@ public:
   inline double volX0trans() const{
     return volX0trans_;
   };
+
+  inline double voldEdx() const{
+    return voldEdx_;
+  };
+
   inline double volLambdatrans() const{
     return volLambdatrans_;
   };
@@ -70,13 +77,18 @@ public:
   inline unsigned nSiHits() const{
     return nSiHits_;
   };
-
+  inline double sensitiveZ() const{
+    return sensitiveZ_;
+  };
   //setters
   inline void volNb(const unsigned & aVal){
     volNb_ = aVal;
   };
   inline void volX0trans(const double & aVal){
     volX0trans_ = aVal;
+  };
+  inline void voldEdx(const double & aVal){
+    voldEdx_ = aVal;
   };
   inline void volLambdatrans(const double & aVal){
     volLambdatrans_ = aVal;
@@ -111,10 +123,14 @@ public:
   inline void nSiHits(const unsigned & aVal){
     nSiHits_ = aVal;
   };
+  inline void sensitiveZ(const unsigned & aVal){
+    sensitiveZ_ = aVal;
+  };
 
 private:
   unsigned volNb_;
   double volX0trans_;
+  double voldEdx_;
   double volLambdatrans_;
   double measuredE_;
   double absorberE_;
@@ -126,8 +142,9 @@ private:
   double hadFrac_;
   double avgTime_;
   unsigned nSiHits_;
+  double sensitiveZ_;
 
-  ClassDef(HGCSSSamplingSection,1);
+  ClassDef(HGCSSSamplingSection,2);
 
 
 

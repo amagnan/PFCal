@@ -11,11 +11,13 @@ void SamplingSection::add(G4double den, G4double dl,
 			  G4int layerId)
 {
   std::string lstr = vol->GetName();
-  for (unsigned ie(0); ie<n_elements;++ie){
+  for (unsigned ie(0); ie<n_elements*n_sectors;++ie){
     if(ele_vol[ie] && lstr==ele_vol[ie]->GetName()){ 
-      ele_den[ie]+=den;
-      ele_dl[ie]+=dl;
-      if (isSensitiveElement(ie)) {//if Si || sci
+      unsigned eleidx = ie%n_elements;
+      ele_den[eleidx]+=den;
+      ele_dl[eleidx]+=dl; 
+      //if (lstr.find("CFMix") != lstr.npos) continue;
+      if (isSensitiveElement(eleidx)) {//if Si || sci
 	unsigned idx = getSensitiveLayerIndex(lstr);
 	//std::cout << "sens layer " << idx << " " << lstr << std::endl;
 	sens_time[idx]+=den*globalTime;
@@ -47,6 +49,24 @@ void SamplingSection::add(G4double den, G4double dl,
     
   }//loop on available materials
   
+  //support cone
+  char nameBuf[100];
+  sprintf(nameBuf,"%s%d","SupportCone",int(layerId+1));
+  if (lstr.find(nameBuf)!=lstr.npos){
+    //add hit
+    G4SiHit lHit;
+    lHit.energy = den;
+    lHit.time = globalTime;
+    lHit.pdgId = pdgId;
+    lHit.layer = layerId;
+    lHit.hit_x = position.x();
+    lHit.hit_y = position.y();
+    lHit.hit_z = position.z();
+    lHit.trackId = trackID;
+    lHit.parentId = parentID;
+    supportcone_HitVec.push_back(lHit);
+  }
+
 }
 
 //
@@ -160,6 +180,17 @@ G4double SamplingSection::getAbsorberX0()
   }
   return val;
 }
+//
+G4double SamplingSection::getAbsorberdEdx()
+{
+  // G4cout << Pb_thick << " " << Pb_X0 << G4endl;
+  double val=0;  
+  for (unsigned ie(0); ie<n_elements;++ie){
+    if (isAbsorberElement(ie))
+      val += ele_thick[ie]*ele_dEdx[ie];
+  }
+  return val;
+}
 
 //
 G4double SamplingSection::getAbsorberLambda()
@@ -195,6 +226,11 @@ G4double SamplingSection::getTotalEnergy()
 const G4SiHitVec & SamplingSection::getSiHitVec(const unsigned & idx) const
 {
   return sens_HitVec[idx];
+}
+
+const G4SiHitVec & SamplingSection::getAlHitVec() const
+{
+  return supportcone_HitVec;
 }
 
 void SamplingSection::trackParticleHistory(const unsigned & idx, const G4SiHitVec & incoming)

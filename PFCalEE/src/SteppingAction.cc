@@ -74,23 +74,86 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
 
   // get local hit position using touchable with theGlobalPos
   //G4ThreeVector LocalHitPos = theTouchable->GetHistory()->GetTopTransform().TransformPoint(position);
- 
-  //G4cout << "Pre   position " << volume->GetName() << " " << position << G4endl;
-  //G4cout << "Post  position " << aStep->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << " " << aStep->GetPostStepPoint()->GetPosition() << G4endl;
-  //G4cout << "Local position " << LocalHitPos << G4endl;
 
+  /*if ( thePrePVname.find("Wphys")!=thePrePVname.npos &&
+       thePostPVname.find("CuExtra")!=thePostPVname.npos){
+    G4cout << " -- debug Pre   position " << volume->GetName() << " " << position << " " ;
+    //G4cout << " -- debug Post  position " << aStep->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << " " << aStep->GetPostStepPoint()->GetPosition() << G4endl;
+    G4cout << thePreStepPoint->GetMaterial()->GetName()
+	   << " " << thePostStepPoint->GetMaterial()->GetName()
+	   << G4endl;
+    //G4cout << "Local position " << LocalHitPos << G4endl;
+    }*/
 
   HGCSSGenParticle genPart;
   //record truth particles
   //time cut: we don't want neutrons re-entering the front-face a long time after...
-  //std::cout << "-- debug: " << thePrePVname << " " << thePostPVname << " " << eventAction_->GetFirstVolumeName() << " " << globalTime << std::endl;
+  //bit for muons study
+  /*if (abs(pdgId)==13 && 
+      thePrePVname=="Scintillator51phys" && 
+      thePostPVname=="Air51phys"){
+    eventAction_->fout() << thePrePVname
+			 << " " << thePostPVname
+			 << " " << trackID
+			 << " " << pdgId
+			 << " " << globalTime
+			 << " " << thePostStepPoint->GetPosition()[0]
+			 << " " << thePostStepPoint->GetPosition()[1]
+			 << " " << thePostStepPoint->GetPosition()[2]
+			 << " " << lTrack->GetMomentum()[0]
+			 << " " << lTrack->GetMomentum()[1]
+			 << " " << lTrack->GetMomentum()[2]
+			 << std::endl;
+			 }*/
+    
 
+
+  //bit for particles study
+  
+  /*if (abs(pdgId)==11 && 
+      ((thePrePVname=="Si11_0phys" || thePrePVname=="Si11_1phys" || thePrePVname=="Si11_2phys" || thePrePVname=="PCB12phys") && 
+      (thePostPVname=="WCu11phys" || thePostPVname=="Si11_0phys"|| thePostPVname=="Si11_1phys"|| thePostPVname=="Si11_2phys" || (thePostPVname=="PCB12phys" && thePrePVname=="Si11_2phys"))) ||
+      ((thePrePVname=="Si18_0phys" || thePrePVname=="Si18_1phys" || thePrePVname=="Si18_2phys" || thePrePVname=="WCu19phys") && 
+       (thePostPVname=="PCB18phys" || thePostPVname=="Si18_0phys"|| thePostPVname=="Si18_1phys"|| thePostPVname=="Si18_2phys" || (thePostPVname=="WCu18phys" && thePrePVname=="Si18_2phys")))
+       )*/
+  /*if (edep>1.)
+    {
+      std::ostringstream lss;
+      lss << thePrePVname
+	  << " " << thePostPVname
+	  << " e " << edep
+	  << " pdg " << pdgId
+	  << " t " << globalTime  
+	  << " p " << lTrack->GetMomentum().mag();
+      //if (abs(pdgId)>1000000000) 
+      lss << " status " << lTrack->GetTrackStatus()
+	  << " l " << stepl
+	  << " Edep " << aStep->GetTotalEnergyDeposit()
+	  << " nonion. " << aStep->GetNonIonizingEnergyDeposit()
+	  << " " << lTrack->GetCreatorProcess()->GetProcessName()
+	  << " Ekin " << lTrack->GetKineticEnergy()
+	;
+      lss << std::endl;
+      std::cout << lss.str();
+      eventAction_->fout() << lss.str();
+      }*/
+  
+  //return;
+  //*/
+
+  //if (thePrePVname=="Wphys") std::cout << "-- debug: " << thePrePVname << " " << thePostPVname << " " << eventAction_->isFirstVolume(thePostPVname) << " time " << globalTime << " trackid=" << trackID << std::endl;
+  //if (abs(pdgId)==11 && 
+  //((thePrePVname=="Si11_0phys" && thePostPVname=="Si11_1phys") || 
+  //(thePrePVname=="Si11_1phys" && thePostPVname=="Si11_0phys")) || 
+  //((thePrePVname=="Si18_0phys" && thePostPVname=="Si18_1phys") || 
+  //(thePrePVname=="Si18_1phys" && thePostPVname=="Si18_0phys"))
+//)
   if (globalTime < timeLimit_ && 
-      thePrePVname=="Wphys"
-      && (thePostPVname==eventAction_->GetFirstVolumeName())
-      ){
+      (thePrePVname=="Wphys"
+	&& eventAction_->isFirstVolume(thePostPVname))
+      )
+    {
     //if (pdgId == 2112) 
-    //std::cout << "-- found incoming: " << thePrePVname << " " << thePostPVname << " " << globalTime << std::endl;
     //const G4ThreeVector & preposition = thePreStepPoint->GetPosition();
     const G4ThreeVector & postposition = thePostStepPoint->GetPosition();
     //std::cout << "pre " << preposition[0] << " " << preposition[1] << " " << postposition[2]
@@ -106,9 +169,12 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
     genPart.pdgid(pdgId);
     genPart.charge(pd->GetPDGCharge());
     genPart.trackID(trackID);
+    //double tmpE = sqrt(pd->GetPDGMass()*pd->GetPDGMass()+(p[0]*p[0]+p[1]*p[1]+p[2]*p[2]));
+    //std::cout << "-- found incoming: " << thePrePVname << " " << thePostPVname << " " << trackID << " id=" << pdgId << " t=" << globalTime << " E=" << tmpE << std::endl;
     //if (pdgId == 2112) genPart.Print(G4cout);
   }
 
+  //if (globalTime < 10) //timeLimit_) 
   eventAction_->Detect(edep,stepl,globalTime,pdgId,volume,position,trackID,parentID,genPart);
   //eventAction_->Detect(edep,stepl,globalTime,pdgId,volume,iyiz);
 }

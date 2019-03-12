@@ -47,11 +47,14 @@
 #include "HepMCG4AsciiReader.hh"
 #include "HepMCG4PythiaInterface.hh"
 
+#define PI 3.1415926535
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-PrimaryGeneratorAction::PrimaryGeneratorAction()
+PrimaryGeneratorAction::PrimaryGeneratorAction(G4int mod, double eta)
 {
+  model_ = mod;
+  eta_ = eta;
   G4int n_particle = 1;
 
   // default generator is particle gun.
@@ -85,7 +88,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
   G4double position = -0.5*(Detector->GetWorldSizeZ());
   particleGun->SetParticlePosition(G4ThreeVector(0.*cm,0.*cm,position));
   
-  G4cout << " -- Gun position set to: 0,0," << position << G4endl;
+  //G4cout << " -- Gun position set to: 0,0," << position << G4endl;
 
   rndmFlag = "off";
 
@@ -107,10 +110,39 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
   //this function is called at the begining of event
   // 
-  G4double z0 = -0.5*(Detector->GetWorldSizeZ());
   G4double x0 = 0.*cm, y0 = 0.*cm;
+  G4double z0 = -0.5*(Detector->GetWorldSizeZ());
+
+  switch(model_) {
+  case 2:
+    //smear within 1cm...
+    z0 = (G4RandGauss::shoot(0.,5.))*cm; break;
+  case 4:
+    x0 = (G4RandFlat::shoot(0.,460)-170)*mm; break;
+    //y0 = (G4RandFlat::shoot(0.,10.)-5)*mm;
+  case 3:
+    x0 = (G4RandFlat::shoot(0.,250.)-125)*mm;
+    //start from near the bottom in y to have enough space for all layers when shooting with an angle...
+    y0 = (G4RandFlat::shoot(0.,200.)-250)*mm;
+    break;
+  case 5:
+    //x0 = (G4RandFlat::shoot(0.,30)-15)*mm;
+    //y0 = (G4RandFlat::shoot(0.,30.)-15)*mm;
+    //update to cover full hexagon
+    //size=6.4mm
+    x0 = (G4RandFlat::shoot(0.,1.)-0.5)*mm;
+    y0 = (G4RandFlat::shoot(0.,1.)-0.5)*mm;
+    break;
+  default: break;
+  }
+
   particleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
-  //G4cout << " -- Gun position set to: " << x0 << "," << y0 << "," << z0 << G4endl;
+  G4cout << " -- Gun position set to: " << x0 << "," << y0 << "," << z0 << G4endl;
+
+  G4double theta0 = 2*atan(exp(-1*eta_));
+  G4double phi0 = (G4RandFlat::shoot(0.,2*PI));
+  if (model_ == 2) particleGun->SetParticleMomentumDirection(G4ThreeVector(cos(phi0)*sin(theta0), sin(phi0)*sin(theta0), cos(theta0)));
+  
   if(currentGenerator){
     currentGenerator->GeneratePrimaryVertex(anEvent);
   }

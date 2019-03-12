@@ -8,12 +8,14 @@ SHELL=bash
 USERINCLUDES += -I$(ROOTSYS)/include/
 USERINCLUDES += -I$(ROOFITSYS)/include/
 #USERINCLUDES += -I$(CMS_PATH)/$(SCRAM_ARCH)/external/boost/1.47.0/include/
+USERINCLUDES += -isystem $(BOOSTSYS)/include
 USERINCLUDES += -Iinclude/ -I../userlib/include/ -I$(FASTJET_INSTALL)/include/
 
 # Define libraries to link
-USERLIBS += $(shell root-config --glibs) #-lGenVector -lTreePlayer -lTMVA
+USERLIBS += $(shell root-config --glibs) -lGenVector # -lTreePlayer -lTMVA
 #USERLIBS += -L$(CMS_PATH)/$(SCRAM_ARCH)/external/boost/1.47.0/lib/ -lboost_regex -lboost_program_options -lboost_filesystem
 USERLIBS += -Wl,-rpath,$(FASTJET_INSTALL)/lib -lm  -L$(FASTJET_INSTALL)/lib -lfastjettools -lfastjet -lfastjetplugins -lsiscone_spherical -lsiscone -lgfortran
+USERLIBS += -L$(BOOSTSYS)/lib -lboost_regex -lboost_program_options -lboost_filesystem
 
 #CXXFLAGS = -Wall -W -Wno-unused-function -Wno-parentheses -Wno-char-subscripts -Wno-unused-parameter -O2 
 CXXFLAGS = -Wall -W -O2 -std=c++0x
@@ -50,7 +52,7 @@ TEST_EXT=cpp
 # Build a list of srcs and bins to build
 SRCS=$(wildcard $(BASEDIR)/src/*.cc)
 EXES=$(wildcard $(BASEDIR)/test/*.cpp)
-OBJS=$(subst $(SRCDIR), $(OBJDIR),$(subst cc,$(OBJ_EXT),$(SRCS)))
+OBJS=$(subst $(SRCDIR), $(OBJDIR),$(subst .cc,.$(OBJ_EXT),$(SRCS)))
 BINS=$(subst $(TESTDIR), $(EXEDIR),$(subst .$(TEST_EXT),,$(EXES)))
 
 all: lib $(BINS)
@@ -71,7 +73,7 @@ $(LIBDIR)/lib$(LIBNAME).so:  $(OBJS) $(LIBDEPENDS)
 lib: $(LIBDIR)/lib$(LIBNAME).so
 
 dictionary:
-	rootcint -v -f src/dict.cc -c include/HGCSSInfo.hh include/HGCSSEvent.hh include/HGCSSSamplingSection.hh include/HGCSSSimHit.hh include/HGCSSGenParticle.hh include/HGCSSRecoHit.hh include/HGCSSRecoJet.hh include/LinkDef.h
+	rootcint -v -f src/dict.cc -c include/HGCSSInfo.hh include/HGCSSEvent.hh include/HGCSSSamplingSection.hh include/HGCSSSimHit.hh include/HGCSSGenParticle.hh include/HGCSSRecoHit.hh include/HGCSSRecoJet.hh include/HGCSSCluster.hh include/HGCSSMipHit.hh include/LinkDef.h
 	sed "s/include\/HGCSS/HGCSS/" src/dict.h > include/dict.h
 	rm src/dict.h
 
